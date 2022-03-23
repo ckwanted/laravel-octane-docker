@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    restart: unless-stopped
+    env_file: .env
+    logging:
+      driver: 'none'
+    ports:
+      - '${MAIL_PORT:-1025}:1025' # smtp server
+      - '${MAIL_WEBUI_PORT:-8025}:8025' # web ui
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

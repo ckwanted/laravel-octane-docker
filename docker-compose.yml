@@ -1,0 +1,73 @@
+version: '3'
+
+services:
+
+  laravel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel
+    restart: unless-stopped
+    env_file: .env
+    working_dir: /app
+    expose:
+      - 8000
+    ports:
+      - '${APP_PORT}:8000'
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+
+  mysql:
+    image: 'mysql:8.0.23'
+    container_name: mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    env_file: .env
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - './docker_data/mysql:/var/lib/mysql'
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.1.0
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+    ports:
+      - 1030:80
+    networks:
+      - app-network
+
+  redis:
+    image: 'redis:alpine'
+    container_name: redis
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - './docker_data/redis:/var/lib/redis'
+    networks:
+      - app-network
+
+  # memcached:
+  #   image: 'memcached:alpine'
+  #   container_name: memcached
+  #   ports:
+  #     - '1020:11211'
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
+    driver: bridge
